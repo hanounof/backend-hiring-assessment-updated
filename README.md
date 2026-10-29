@@ -34,12 +34,13 @@ There are 2 entities in this sample:
 
 ## API
 
-| Method | Path          | Auth | Description                                                                       |
-|--------|---------------|------|-----------------------------------------------------------------------------------|
-| `POST` | `/ads`        | yes | Create an ad                                                                      |
-| `GET` | `/ads/{id}`   | no | Get a single ad                                                                   |
-| `GET` | `/ads`        | no | List ads (filterable by `title`, `user_id`, `min_price_cents`, `max_price_cents`) |
-| `POST` | `/ads/import` | yes | Bulk ad import                                                                    |
+| Method   | Path          | Auth | Description                                                                       |
+|----------|---------------|------|-----------------------------------------------------------------------------------|
+| `POST`   | `/ads`        | yes  | Create an ad                                                                      |
+| `GET`    | `/ads/{id}`   | no   | Get a single ad                                                                   |
+| `DELETE` | `/ads/{id}`   | yes  | Delete an ad owned by the authenticated user                                      |
+| `GET`    | `/ads`        | no   | List ads (filterable by `title`, `user_id`, `min_price_cents`, `max_price_cents`) |
+| `POST`   | `/ads/import` | yes  | Bulk ad import                                                                    |
 
 ```bash
 # Health check
@@ -50,6 +51,10 @@ curl -s 'http://localhost:8080/ads?title=bike&min_price_cents=1000'
 
 # Get a single ad
 curl -s http://localhost:8080/ads/1
+
+# Delete an ad you own (requires Authorization header)
+curl -s -X DELETE http://localhost:8080/ads/1 \
+  -H 'Authorization: 00000000-0000-0000-0000-000000000001'
 
 # Create an ad (requires Authorization header)
 curl -s -X POST http://localhost:8080/ads \

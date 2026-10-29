@@ -2,7 +2,7 @@ openapi: "3.0.3"
 
 info:
   title: Ads API
-  description: Classified ads — list, read, and create ads.
+  description: Classified ads — list, read, create, and delete ads.
   version: "1.0.0"
 
 servers:
@@ -113,6 +113,32 @@ paths:
           description: adID is not a valid integer.
         "404":
           description: No ad exists with this ID.
+        "500":
+          description: Unexpected server error.
+
+    delete:
+      summary: Delete an ad by ID
+      operationId: deleteAd
+      tags: [ads]
+      security:
+        - userID: []
+      parameters:
+        - name: adID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 1
+      responses:
+        "204":
+          description: The ad was deleted.
+        "400":
+          description: adID is not a valid integer.
+        "401":
+          description: Missing Authorization header.
+        "404":
+          description: No ad exists with this ID, or it belongs to another user.
         "500":
           description: Unexpected server error.
 

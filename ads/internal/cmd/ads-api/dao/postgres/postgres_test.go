@@ -127,6 +127,48 @@ func TestGetAdByID(t *testing.T) {
 	})
 }
 
+func TestDeleteAd(t *testing.T) {
+	ctx := context.Background()
+	ownerID := domain.UserID("00000000-0000-0000-0000-000000000001")
+
+	t.Run("deletes an ad owned by the user", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		mock.ExpectExec("DELETE FROM ads").
+			WithArgs(int64(42), string(ownerID)).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		err := dao.DeleteAd(ctx, 42, ownerID)
+
+		require.NoError(t, err)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("returns ErrNotFound when the ad is missing or owned by another user", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		mock.ExpectExec("DELETE FROM ads").
+			WithArgs(int64(42), string(ownerID)).
+			WillReturnResult(sqlmock.NewResult(0, 0))
+
+		err := dao.DeleteAd(ctx, 42, ownerID)
+
+		require.ErrorIs(t, err, adsdao.ErrNotFound)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("returns error when the delete query fails", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		boom := errors.New("db down")
+		mock.ExpectExec("DELETE FROM ads").
+			WithArgs(int64(42), string(ownerID)).
+			WillReturnError(boom)
+
+		err := dao.DeleteAd(ctx, 42, ownerID)
+
+		require.ErrorIs(t, err, boom)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
 func TestCreateAd(t *testing.T) {
 	ctx := context.Background()
 	req := adsdao.CreateAdRequest{

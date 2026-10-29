@@ -157,6 +157,26 @@ func (d *DAO) GetAdByID(ctx context.Context, id domain.AdID) (domain.Ad, error) 
 	return ad, nil
 }
 
+// DeleteAd removes an ad owned by ownerID.
+func (d *DAO) DeleteAd(ctx context.Context, id domain.AdID, ownerID domain.UserID) error {
+	const query = `DELETE FROM ads WHERE id = $1 AND user_id = $2::uuid`
+
+	result, err := d.runner().ExecContext(ctx, query, int64(id), string(ownerID))
+	if err != nil {
+		return fmt.Errorf("unable to delete ad: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("unable to determine whether ad was deleted: %w", err)
+	}
+	if rowsAffected == 0 {
+		return adsdao.ErrNotFound
+	}
+
+	return nil
+}
+
 // CreateAd inserts an ad and returns its generated identifier.
 func (d *DAO) CreateAd(ctx context.Context, req adsdao.CreateAdRequest) (domain.AdID, error) {
 	const query = `
