@@ -17,6 +17,7 @@ type getAdResponse struct {
 	PriceCents int64     `json:"price_cents"`
 	PhotoURL   string    `json:"photo_url"`
 	UserID     string    `json:"user_id"`
+	Username   string    `json:"username"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 
@@ -27,6 +28,7 @@ func adToGetAdResponse(a domain.Ad) getAdResponse {
 		PriceCents: a.Price,
 		PhotoURL:   a.PhotoURL,
 		UserID:     a.UserID.String(),
+		Username:   a.Username,
 		CreatedAt:  a.CreatedAt.UTC(),
 	}
 }

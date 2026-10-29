@@ -6,6 +6,7 @@ import (
 
 	adsdao "github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/dao"
 	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/domain"
+	usersclient "github.mpi-internal.com/leboncoin/backend-hiring-assessment/users/pkg"
 )
 
 type (
@@ -13,22 +14,29 @@ type (
 	GetAdByIDFunc func(ctx context.Context, id domain.AdID) (domain.Ad, error)
 
 	getAdByID struct {
-		adDAO adsdao.DAO
+		adDAO      adsdao.DAO
+		userClient usersclient.UserClient
 	}
 )
 
-// NewGetAdByIDFunc returns a GetAdByIDFunc backed by the given DAO.
-func NewGetAdByIDFunc(adDAO adsdao.DAO) GetAdByIDFunc {
-	return getAdByID{adDAO: adDAO}.getAdByID
+// NewGetAdByIDFunc returns a GetAdByIDFunc backed by the given DAO and user client.
+func NewGetAdByIDFunc(adDAO adsdao.DAO, userClient usersclient.UserClient) GetAdByIDFunc {
+	return getAdByID{adDAO: adDAO, userClient: userClient}.getAdByID
 }
 
 func (uc getAdByID) getAdByID(ctx context.Context, id domain.AdID) (domain.Ad, error) {
-	found, err := uc.adDAO.GetAdByID(ctx, id)
+	ad, err := uc.adDAO.GetAdByID(ctx, id)
 	if err != nil {
 		return domain.Ad{}, fmt.Errorf("unable to get ad %s: %w", id, err)
 	}
 
-	return found, nil
+	user, err := uc.userClient.GetUserByID(ctx, ad.UserID)
+	if err != nil {
+		return domain.Ad{}, fmt.Errorf("unable to get user %s for ad %s: %w", ad.UserID, id, err)
+	}
+
+	ad.Username = user.Nickname
+	return ad, nil
 }
 
 // TODO: remove this code

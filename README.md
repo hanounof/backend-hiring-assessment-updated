@@ -24,7 +24,7 @@ The API needs an up-and-running postgres database, which can be launched via the
 docker compose up -d
 ```
 
-This starts PostgreSQL with the schema and seed data already applied, as well as the `ads` api.
+This starts PostgreSQL with the schema and seed data already applied, the `ads` API, and the stub identity service used to resolve ad owners' usernames.
 
 ## Model
 

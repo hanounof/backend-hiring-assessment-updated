@@ -20,6 +20,7 @@ type Ad struct {
 	Price     int64
 	PhotoURL  string
 	UserID    UserID
+	Username  string
 	CreatedAt time.Time
 }
 

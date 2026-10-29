@@ -153,6 +153,46 @@ components:
   schemas:
     Ad:
       type: object
+      required: [id, title, price_cents, photo_url, user_id, username, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: mountain bike
+        price_cents:
+          type: integer
+          format: int64
+          description: Price in euro cents.
+          example: 15000
+        photo_url:
+          type: string
+          example: https://example.com/bike.jpg
+        user_id:
+          type: string
+          example: "00000000-0000-0000-0000-000000000001"
+        username:
+          type: string
+          description: The ad owner's nickname from the identity service.
+          example: alice
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    ListAdsResponse:
+      type: object
+      required: [ads]
+      properties:
+        ads:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListAd"
+
+    ListAd:
+      type: object
       required: [id, title, price_cents, photo_url, user_id, created_at]
       properties:
         id:
@@ -177,15 +217,6 @@ components:
           type: string
           format: date-time
           example: "2024-01-15T10:00:00Z"
-
-    ListAdsResponse:
-      type: object
-      required: [ads]
-      properties:
-        ads:
-          type: array
-          items:
-            $ref: "#/components/schemas/Ad"
 
     CreateAdBody:
       type: object

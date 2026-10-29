@@ -7,6 +7,7 @@ import (
 
 	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/dao/postgres"
 	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/http"
+	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/identity"
 	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/usecase"
 	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/common/httpserver"
 )
@@ -34,7 +35,7 @@ func run() error {
 
 	router := http.NewRouter(http.Usecases{
 		CreateAd: usecase.NewCreateAdFunc(adDAO),
-		GetAd:    usecase.NewGetAdByIDFunc(adDAO),
+		GetAd:    usecase.NewGetAdByIDFunc(adDAO, identity.NewClient(cfg.IdentityURL, cfg.IdentityTimeout)),
 		ListAds:  usecase.NewListAdsFunc(adDAO),
 		DeleteAd: usecase.NewDeleteAdFunc(adDAO),
 	})
