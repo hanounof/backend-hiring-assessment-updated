@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -18,6 +19,19 @@ func adIDFromURL(r *http.Request) (domain.AdID, error) {
 	}
 
 	return domain.AdID(id), nil
+}
+
+func priceToCents(price float64) (int64, error) {
+	if math.IsNaN(price) || math.IsInf(price, 0) {
+		return 0, fmt.Errorf("price must be finite")
+	}
+
+	cents := math.Round(price * 100)
+	if cents >= float64(math.MaxInt64) || cents <= float64(math.MinInt64) {
+		return 0, fmt.Errorf("price is out of range")
+	}
+
+	return int64(cents), nil
 }
 
 func decodeBody(r *http.Request, target any) error {

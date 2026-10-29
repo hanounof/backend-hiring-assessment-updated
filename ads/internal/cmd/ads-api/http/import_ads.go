@@ -25,13 +25,23 @@ func handlerImportAds(createAd usecase.CreateAdFunc) http.HandlerFunc {
 			return
 		}
 
+		pricesCents := make([]int64, len(body.Ads))
+		for i, item := range body.Ads {
+			priceCents, err := priceToCents(item.Price)
+			if err != nil {
+				rw.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			pricesCents[i] = priceCents
+		}
+
 		ownerID := domain.UserID(middleware.UserIDFromRequest(r))
 		ids := make([]int64, 0, len(body.Ads))
 
-		for _, item := range body.Ads {
+		for i, item := range body.Ads {
 			adID, err := createAd(r.Context(), usecase.CreateAdRequest{
 				Title:      item.Title,
-				PriceCents: item.PriceCents,
+				PriceCents: pricesCents[i],
 				PhotoURL:   item.PhotoURL,
 				OwnerID:    ownerID,
 			})

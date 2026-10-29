@@ -153,7 +153,7 @@ components:
   schemas:
     Ad:
       type: object
-      required: [id, title, price_cents, photo_url, user_id, username, created_at]
+      required: [id, title, price, photo_url, user_id, username, created_at]
       properties:
         id:
           type: integer
@@ -162,11 +162,11 @@ components:
         title:
           type: string
           example: mountain bike
-        price_cents:
-          type: integer
-          format: int64
-          description: Price in euro cents.
-          example: 15000
+        price:
+          type: number
+          format: float
+          description: Price in euros.
+          example: 150.00
         photo_url:
           type: string
           example: https://example.com/bike.jpg
@@ -193,7 +193,7 @@ components:
 
     ListAd:
       type: object
-      required: [id, title, price_cents, photo_url, user_id, created_at]
+      required: [id, title, price, photo_url, user_id, created_at]
       properties:
         id:
           type: integer
@@ -202,11 +202,11 @@ components:
         title:
           type: string
           example: mountain bike
-        price_cents:
-          type: integer
-          format: int64
-          description: Price in euro cents.
-          example: 15000
+        price:
+          type: number
+          format: float
+          description: Price in euros.
+          example: 150.00
         photo_url:
           type: string
           example: https://example.com/bike.jpg
@@ -220,16 +220,16 @@ components:
 
     CreateAdBody:
       type: object
-      required: [title, price_cents, photo_url]
+      required: [title, price, photo_url]
       properties:
         title:
           type: string
           example: mountain bike
-        price_cents:
-          type: integer
-          format: int64
-          description: Price in euro cents.
-          example: 15000
+        price:
+          type: number
+          format: float
+          description: Price in euros.
+          example: 150.00
         photo_url:
           type: string
           example: https://example.com/bike.jpg

@@ -30,7 +30,7 @@ func TestHandlerGetAd(t *testing.T) {
 		ad := domain.Ad{
 			ID:        42,
 			Title:     "mountain bike",
-			Price:     15000,
+			Price:     15001,
 			PhotoURL:  "https://example.com/bike.jpg",
 			UserID:    "user-1",
 			Username:  "alice",
@@ -52,7 +52,7 @@ func TestHandlerGetAd(t *testing.T) {
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&got))
 		assert.Equal(t, int64(42), got.ID)
 		assert.Equal(t, "mountain bike", got.Title)
-		assert.Equal(t, int64(15000), got.PriceCents)
+		assert.Equal(t, 150.01, got.Price)
 		assert.Equal(t, "https://example.com/bike.jpg", got.PhotoURL)
 		assert.Equal(t, "user-1", got.UserID)
 		assert.Equal(t, "alice", got.Username)

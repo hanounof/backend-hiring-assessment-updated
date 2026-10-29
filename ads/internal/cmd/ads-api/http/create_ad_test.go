@@ -41,9 +41,9 @@ func postJSON(t *testing.T, url string, body any, authHeader string) *http.Respo
 
 func TestHandlerCreateAd(t *testing.T) {
 	validBody := createAdBody{
-		Title:      "mountain bike",
-		PriceCents: 15000,
-		PhotoURL:   "https://example.com/bike.jpg",
+		Title:    "mountain bike",
+		Price:    150.01,
+		PhotoURL: "https://example.com/bike.jpg",
 	}
 
 	t.Run("returns 201 with ID on success", func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestHandlerCreateAd(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 		assert.Equal(t, domain.UserID("user-42"), received.OwnerID)
 		assert.Equal(t, "mountain bike", received.Title)
-		assert.Equal(t, int64(15000), received.PriceCents)
+		assert.Equal(t, int64(15001), received.PriceCents)
 		assert.Equal(t, "https://example.com/bike.jpg", received.PhotoURL)
 	})
 

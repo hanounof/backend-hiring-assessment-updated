@@ -34,9 +34,9 @@ func TestHandlerImportAds(t *testing.T) {
 		defer srv.Close()
 
 		body := importAdsBody{Ads: []createAdBody{
-			{Title: "bike", PriceCents: 5000, PhotoURL: "https://example.com/bike.jpg"},
-			{Title: "scooter", PriceCents: 8000, PhotoURL: "https://example.com/scooter.jpg"},
-			{Title: "car", PriceCents: 200000, PhotoURL: "https://example.com/car.jpg"},
+			{Title: "bike", Price: 50, PhotoURL: "https://example.com/bike.jpg"},
+			{Title: "scooter", Price: 80, PhotoURL: "https://example.com/scooter.jpg"},
+			{Title: "car", Price: 2000, PhotoURL: "https://example.com/car.jpg"},
 		}}
 		resp := postJSON(t, srv.URL+"/ads/import", body, "user-1")
 		defer resp.Body.Close()
@@ -57,8 +57,8 @@ func TestHandlerImportAds(t *testing.T) {
 		defer srv.Close()
 
 		body := importAdsBody{Ads: []createAdBody{
-			{Title: "bike", PriceCents: 5000, PhotoURL: "https://example.com/bike.jpg"},
-			{Title: "scooter", PriceCents: 8000, PhotoURL: "https://example.com/scooter.jpg"},
+			{Title: "bike", Price: 50, PhotoURL: "https://example.com/bike.jpg"},
+			{Title: "scooter", Price: 80, PhotoURL: "https://example.com/scooter.jpg"},
 		}}
 		resp := postJSON(t, srv.URL+"/ads/import", body, "user-42")
 		defer resp.Body.Close()
@@ -129,9 +129,9 @@ func TestHandlerImportAds(t *testing.T) {
 		defer srv.Close()
 
 		body := importAdsBody{Ads: []createAdBody{
-			{Title: "bike", PriceCents: 5000, PhotoURL: "https://example.com/bike.jpg"},
-			{Title: "scooter", PriceCents: 8000, PhotoURL: "https://example.com/scooter.jpg"},
-			{Title: "car", PriceCents: 200000, PhotoURL: "https://example.com/car.jpg"},
+			{Title: "bike", Price: 50, PhotoURL: "https://example.com/bike.jpg"},
+			{Title: "scooter", Price: 80, PhotoURL: "https://example.com/scooter.jpg"},
+			{Title: "car", Price: 2000, PhotoURL: "https://example.com/car.jpg"},
 		}}
 		resp := postJSON(t, srv.URL+"/ads/import", body, "user-1")
 		defer resp.Body.Close()

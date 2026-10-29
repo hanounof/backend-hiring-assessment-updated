@@ -9,9 +9,9 @@ import (
 )
 
 type createAdBody struct {
-	Title      string `json:"title"`
-	PriceCents int64  `json:"price_cents"`
-	PhotoURL   string `json:"photo_url"`
+	Title    string  `json:"title"`
+	Price    float64 `json:"price"`
+	PhotoURL string  `json:"photo_url"`
 }
 
 type createAdResponse struct {
@@ -27,9 +27,15 @@ func handlerCreateAd(createAd usecase.CreateAdFunc) http.HandlerFunc {
 			return
 		}
 
+		priceCents, err := priceToCents(body.Price)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		adID, err := createAd(r.Context(), usecase.CreateAdRequest{
 			Title:      body.Title,
-			PriceCents: body.PriceCents,
+			PriceCents: priceCents,
 			PhotoURL:   body.PhotoURL,
 			OwnerID:    middleware.UserIDFromHeader(r),
 		})

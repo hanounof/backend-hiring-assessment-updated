@@ -14,7 +14,7 @@ import (
 type getAdResponse struct {
 	ID         int64     `json:"id"`
 	Title      string    `json:"title"`
-	PriceCents int64     `json:"price_cents"`
+	Price      float64   `json:"price"`
 	PhotoURL   string    `json:"photo_url"`
 	UserID     string    `json:"user_id"`
 	Username   string    `json:"username"`
@@ -25,7 +25,7 @@ func adToGetAdResponse(a domain.Ad) getAdResponse {
 	return getAdResponse{
 		ID:         int64(a.ID),
 		Title:      a.Title,
-		PriceCents: a.Price,
+		Price:      float64(a.Price) / 100,
 		PhotoURL:   a.PhotoURL,
 		UserID:     a.UserID.String(),
 		Username:   a.Username,
