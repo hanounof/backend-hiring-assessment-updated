@@ -17,7 +17,7 @@ type importAdsResponse struct {
 	IDs []int64 `json:"ids"`
 }
 
-func handlerImportAds(createAd usecase.CreateAdFunc) http.HandlerFunc {
+func handlerImportAds(importAds usecase.ImportAdsFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		var body importAdsBody
 		if err := decodeBody(r, &body); err != nil {
@@ -25,31 +25,36 @@ func handlerImportAds(createAd usecase.CreateAdFunc) http.HandlerFunc {
 			return
 		}
 
-		pricesCents := make([]int64, len(body.Ads))
-		for i, item := range body.Ads {
+		if len(body.Ads) == 0 {
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(rw).Encode(importAdsResponse{IDs: []int64{}})
+			return
+		}
+
+		ownerID := domain.UserID(middleware.UserIDFromRequest(r))
+		reqs := make([]usecase.CreateAdRequest, 0, len(body.Ads))
+		for _, item := range body.Ads {
 			priceCents, err := priceToCents(item.Price)
 			if err != nil {
 				rw.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			pricesCents[i] = priceCents
-		}
-
-		ownerID := domain.UserID(middleware.UserIDFromRequest(r))
-		ids := make([]int64, 0, len(body.Ads))
-
-		for i, item := range body.Ads {
-			adID, err := createAd(r.Context(), usecase.CreateAdRequest{
+			reqs = append(reqs, usecase.CreateAdRequest{
 				Title:      item.Title,
-				PriceCents: pricesCents[i],
+				PriceCents: priceCents,
 				PhotoURL:   item.PhotoURL,
 				OwnerID:    ownerID,
 			})
-			if err != nil {
-				rw.WriteHeader(http.StatusInternalServerError)
-				return
-			}
+		}
 
+		adIDs, err := importAds(r.Context(), reqs)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		ids := make([]int64, 0, len(adIDs))
+		for _, adID := range adIDs {
 			ids = append(ids, int64(adID))
 		}
 
