@@ -229,7 +229,7 @@ func (d *DAO) CreateAdWithQuota(ctx context.Context, req adsdao.CreateAdRequest)
 
 	var count int64
 	err = tx.QueryRowContext(ctx,
-		`SELECT count(*) FROM ads WHERE user_id = $1::uuid AND created_at > clock_timestamp() - INTERVAL '24 hours'`,
+		`SELECT count(*) FROM ad_publications WHERE user_id = $1::uuid AND published_at > clock_timestamp() - INTERVAL '24 hours'`,
 		string(req.OwnerID),
 	).Scan(&count)
 	if err != nil {
@@ -254,6 +254,14 @@ func (d *DAO) CreateAdWithQuota(ctx context.Context, req adsdao.CreateAdRequest)
 			err = fmt.Errorf("unable to create ad: %w", err)
 		}
 		return 0, rollback(err)
+	}
+
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO ad_publications (user_id, published_at) VALUES ($1::uuid, clock_timestamp())`,
+		string(req.OwnerID),
+	)
+	if err != nil {
+		return 0, rollback(fmt.Errorf("unable to record ad publication: %w", err))
 	}
 
 	if err := tx.Commit(); err != nil {

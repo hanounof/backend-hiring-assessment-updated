@@ -236,12 +236,15 @@ func TestCreateAdWithQuota(t *testing.T) {
 		mock.ExpectQuery("SELECT 1 FROM").
 			WithArgs(string(req.OwnerID)).
 			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
-		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ads").
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ad_publications").
 			WithArgs(string(req.OwnerID)).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(4)))
 		mock.ExpectQuery("INSERT INTO ads").
 			WithArgs(req.Title, req.PriceCents, req.PhotoURL, string(req.OwnerID)).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(7)))
+		mock.ExpectExec("INSERT INTO ad_publications").
+			WithArgs(string(req.OwnerID)).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
 		got, err := dao.CreateAdWithQuota(ctx, req)
@@ -257,7 +260,7 @@ func TestCreateAdWithQuota(t *testing.T) {
 		mock.ExpectQuery("SELECT 1 FROM").
 			WithArgs(string(req.OwnerID)).
 			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
-		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ads").
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ad_publications").
 			WithArgs(string(req.OwnerID)).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(5)))
 		mock.ExpectRollback()
@@ -275,7 +278,31 @@ func TestCreateAdWithQuota(t *testing.T) {
 			WithArgs(string(req.OwnerID)).
 			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
 		boom := errors.New("db down")
-		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ads").
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ad_publications").
+			WithArgs(string(req.OwnerID)).
+			WillReturnError(boom)
+		mock.ExpectRollback()
+
+		_, err := dao.CreateAdWithQuota(ctx, req)
+
+		require.ErrorIs(t, err, boom)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("rolls back ad creation when publication cannot be recorded", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT 1 FROM").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ad_publications").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(0)))
+		mock.ExpectQuery("INSERT INTO ads").
+			WithArgs(req.Title, req.PriceCents, req.PhotoURL, string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(7)))
+		boom := errors.New("publication table unavailable")
+		mock.ExpectExec("INSERT INTO ad_publications").
 			WithArgs(string(req.OwnerID)).
 			WillReturnError(boom)
 		mock.ExpectRollback()

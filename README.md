@@ -26,6 +26,8 @@ docker compose up -d
 
 This starts PostgreSQL with the schema and seed data already applied, the `ads` API, and the stub identity service used to resolve ad owners' usernames.
 
+The PostgreSQL image runs these SQL files only when initializing an empty data directory. For an existing database, apply any new migration once before deploying the API; for example, apply `ads/internal/cmd/ads-api/dao/postgres/migrations/003_create_ad_publications.sql` to add publication history for the quota.
+
 ## Model
 
 There are 2 entities in this sample:
@@ -42,7 +44,7 @@ There are 2 entities in this sample:
 | `GET`    | `/ads`        | no   | List ads (filterable by `title`, `user_id`, `min_price_cents`, `max_price_cents`) |
 | `POST`   | `/ads/import` | yes  | Bulk ad import                                                                    |
 
-Users may create up to five ads through `POST /ads` in any rolling 24-hour period. Bulk imports are exempt.
+Users may publish up to five ads through `POST /ads` in any rolling 24-hour period; deleting an ad does not restore quota. Bulk imports are exempt.
 
 ```bash
 # Health check

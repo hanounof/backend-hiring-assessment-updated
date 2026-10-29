@@ -57,7 +57,7 @@ func TestImportAds(t *testing.T) {
 	t.Run("returns error when transaction cannot begin", func(t *testing.T) {
 		m := mockdao.New(t)
 		beginErr := errors.New("database unavailable")
-		m.On("Begin", ctx).Return(nil, beginErr).Once()
+		m.On("Begin", ctx).Return(beginErr).Once()
 
 		ids, err := usecase.NewImportAdsFunc(m)(ctx, reqs)
 

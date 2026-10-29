@@ -39,7 +39,7 @@ func handlerCreateAd(createAd usecase.CreateAdFunc) http.HandlerFunc {
 			Title:      body.Title,
 			PriceCents: priceCents,
 			PhotoURL:   body.PhotoURL,
-			OwnerID:    middleware.UserIDFromHeader(r),
+			OwnerID:    middleware.UserIDFromRequest(r),
 		})
 		if err != nil {
 			if errors.Is(err, adsdao.ErrQuotaExceeded) {
