@@ -21,6 +21,8 @@ type Store interface {
 // DAO stores and retrieves ads.
 type DAO interface {
 	Store
+	// CreateAdWithQuota creates an ad only if the owner is under the posting limit.
+	CreateAdWithQuota(ctx context.Context, req CreateAdRequest) (domain.AdID, error)
 	// Begin opens a transaction. Every call made on the returned Tx is part of it, and the caller must end it with Commit or Rollback.
 	Begin(ctx context.Context) (Tx, error)
 }
@@ -55,6 +57,8 @@ const (
 	ErrNotFound sentinelError = "ad not found"
 	// ErrUnknownOwner is returned when an ad references a user that does not exist.
 	ErrUnknownOwner sentinelError = "unknown owner"
+	// ErrQuotaExceeded is returned when an owner has reached the ad publishing limit.
+	ErrQuotaExceeded sentinelError = "ad publishing quota exceeded"
 )
 
 type sentinelError string

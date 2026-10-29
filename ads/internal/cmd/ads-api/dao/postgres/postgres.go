@@ -13,7 +13,10 @@ import (
 	"github.mpi-internal.com/leboncoin/backend-hiring-assessment/ads/internal/cmd/ads-api/domain"
 )
 
-const adColumns = `id, title, price_cents, photo_url, user_id::text, created_at`
+const (
+	adColumns               = `id, title, price_cents, photo_url, user_id::text, created_at`
+	maxAdsPerRolling24Hours = 5
+)
 
 // DAO is a PostgreSQL-backed ad store.
 type DAO struct {
@@ -193,6 +196,68 @@ func (d *DAO) CreateAd(ctx context.Context, req adsdao.CreateAdRequest) (domain.
 		}
 
 		return 0, fmt.Errorf("unable to create ad: %w", err)
+	}
+
+	return id, nil
+}
+
+// CreateAdWithQuota serializes writes per owner and enforces the rolling 24-hour limit.
+func (d *DAO) CreateAdWithQuota(ctx context.Context, req adsdao.CreateAdRequest) (domain.AdID, error) {
+	if d.tx != nil {
+		return 0, errors.New("unable to enforce ad quota inside an existing transaction")
+	}
+
+	tx, err := d.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, fmt.Errorf("unable to begin ad creation: %w", err)
+	}
+	rollback := func(cause error) error {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			return errors.Join(cause, fmt.Errorf("unable to roll back ad creation: %w", rollbackErr))
+		}
+		return cause
+	}
+
+	var locked int
+	err = tx.QueryRowContext(ctx,
+		`SELECT 1 FROM (SELECT pg_advisory_xact_lock(hashtextextended($1, 0))) AS owner_lock`,
+		string(req.OwnerID),
+	).Scan(&locked)
+	if err != nil {
+		return 0, rollback(fmt.Errorf("unable to lock ad quota: %w", err))
+	}
+
+	var count int64
+	err = tx.QueryRowContext(ctx,
+		`SELECT count(*) FROM ads WHERE user_id = $1::uuid AND created_at > clock_timestamp() - INTERVAL '24 hours'`,
+		string(req.OwnerID),
+	).Scan(&count)
+	if err != nil {
+		return 0, rollback(fmt.Errorf("unable to check ad quota: %w", err))
+	}
+	if count >= maxAdsPerRolling24Hours {
+		return 0, rollback(adsdao.ErrQuotaExceeded)
+	}
+
+	const query = `
+		INSERT INTO ads (title, price_cents, photo_url, user_id, created_at)
+		VALUES ($1, $2, $3, $4::uuid, clock_timestamp())
+		RETURNING id`
+
+	var id domain.AdID
+	err = tx.QueryRowContext(ctx, query, req.Title, req.PriceCents, req.PhotoURL, string(req.OwnerID)).Scan(&id)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			err = fmt.Errorf("unable to create ad: %w", adsdao.ErrUnknownOwner)
+		} else {
+			err = fmt.Errorf("unable to create ad: %w", err)
+		}
+		return 0, rollback(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, rollback(fmt.Errorf("unable to commit ad creation: %w", err))
 	}
 
 	return id, nil

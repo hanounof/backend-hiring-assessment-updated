@@ -42,6 +42,8 @@ There are 2 entities in this sample:
 | `GET`    | `/ads`        | no   | List ads (filterable by `title`, `user_id`, `min_price_cents`, `max_price_cents`) |
 | `POST`   | `/ads/import` | yes  | Bulk ad import                                                                    |
 
+Users may create up to five ads through `POST /ads` in any rolling 24-hour period. Bulk imports are exempt.
+
 ```bash
 # Health check
 curl -s -v http://localhost:8080/health

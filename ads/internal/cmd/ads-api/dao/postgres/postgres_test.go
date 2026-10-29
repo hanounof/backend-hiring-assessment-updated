@@ -221,6 +221,72 @@ func TestCreateAd(t *testing.T) {
 	})
 }
 
+func TestCreateAdWithQuota(t *testing.T) {
+	ctx := context.Background()
+	req := adsdao.CreateAdRequest{
+		Title:      "mountain bike",
+		PriceCents: 15000,
+		PhotoURL:   "https://example.com/bike.jpg",
+		OwnerID:    "00000000-0000-0000-0000-000000000001",
+	}
+
+	t.Run("creates ad when under the limit", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT 1 FROM").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ads").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(4)))
+		mock.ExpectQuery("INSERT INTO ads").
+			WithArgs(req.Title, req.PriceCents, req.PhotoURL, string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(7)))
+		mock.ExpectCommit()
+
+		got, err := dao.CreateAdWithQuota(ctx, req)
+
+		require.NoError(t, err)
+		assert.Equal(t, domain.AdID(7), got)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("rolls back when the limit is reached", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT 1 FROM").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ads").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(int64(5)))
+		mock.ExpectRollback()
+
+		_, err := dao.CreateAdWithQuota(ctx, req)
+
+		require.ErrorIs(t, err, adsdao.ErrQuotaExceeded)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("rolls back when quota lookup fails", func(t *testing.T) {
+		dao, mock := newMockDAO(t)
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT 1 FROM").
+			WithArgs(string(req.OwnerID)).
+			WillReturnRows(sqlmock.NewRows([]string{"?column?"}).AddRow(1))
+		boom := errors.New("db down")
+		mock.ExpectQuery("SELECT count\\(\\*\\) FROM ads").
+			WithArgs(string(req.OwnerID)).
+			WillReturnError(boom)
+		mock.ExpectRollback()
+
+		_, err := dao.CreateAdWithQuota(ctx, req)
+
+		require.ErrorIs(t, err, boom)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
 func TestTransaction(t *testing.T) {
 	ctx := context.Background()
 	req := adsdao.CreateAdRequest{

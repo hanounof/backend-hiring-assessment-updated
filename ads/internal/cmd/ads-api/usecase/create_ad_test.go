@@ -31,7 +31,7 @@ func TestCreateAd(t *testing.T) {
 
 	t.Run("nominal", func(t *testing.T) {
 		m := mock.New(t)
-		m.On("CreateAd", ctx, daoReq).Return(domain.AdID(7), nil)
+		m.On("CreateAdWithQuota", ctx, daoReq).Return(domain.AdID(7), nil)
 
 		got, err := usecase.NewCreateAdFunc(m)(ctx, ucReq)
 
@@ -42,7 +42,7 @@ func TestCreateAd(t *testing.T) {
 	t.Run("error from dao", func(t *testing.T) {
 		m := mock.New(t)
 		dbErr := errors.New("connection reset")
-		m.On("CreateAd", ctx, daoReq).Return(domain.AdID(0), dbErr)
+		m.On("CreateAdWithQuota", ctx, daoReq).Return(domain.AdID(0), dbErr)
 
 		_, err := usecase.NewCreateAdFunc(m)(ctx, ucReq)
 

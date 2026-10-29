@@ -31,7 +31,7 @@ func NewCreateAdFunc(adDAO adsdao.DAO) CreateAdFunc {
 }
 
 func (uc createAd) createAd(ctx context.Context, req CreateAdRequest) (domain.AdID, error) {
-	adID, err := uc.adDAO.CreateAd(ctx, adsdao.CreateAdRequest{
+	adID, err := uc.adDAO.CreateAdWithQuota(ctx, adsdao.CreateAdRequest{
 		Title:      req.Title,
 		PriceCents: req.PriceCents,
 		PhotoURL:   req.PhotoURL,

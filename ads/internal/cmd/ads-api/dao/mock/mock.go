@@ -57,6 +57,15 @@ func (m *Mock) CreateAd(ctx context.Context, req adsdao.CreateAdRequest) (domain
 	return adID, args.Error(1)
 }
 
+// CreateAdWithQuota returns the configured ad ID and error.
+func (m *Mock) CreateAdWithQuota(ctx context.Context, req adsdao.CreateAdRequest) (domain.AdID, error) {
+	args := m.Called(ctx, req)
+
+	adID, _ := args.Get(0).(domain.AdID)
+
+	return adID, args.Error(1)
+}
+
 // Begin returns the mock itself as the transaction, so expectations stay set on a single object, and the error set on the mock.
 func (m *Mock) Begin(ctx context.Context) (adsdao.Tx, error) {
 	args := m.Called(ctx)

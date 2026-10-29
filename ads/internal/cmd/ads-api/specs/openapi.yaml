@@ -66,6 +66,7 @@ paths:
     post:
       summary: Create an ad
       operationId: createAd
+      description: Each user may create at most five ads in any rolling 24-hour period. Bulk imports are exempt.
       tags: [ads]
       security:
         - userID: []
@@ -86,6 +87,8 @@ paths:
           description: Malformed or unknown request body field.
         "401":
           description: Missing Authorization header.
+        "429":
+          description: The user has reached the five-ad rolling 24-hour limit.
         "500":
           description: Unexpected server error.
 
